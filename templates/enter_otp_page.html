@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data_PILOT</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .otp-container {
+            text-align: center;
+        }
+
+        input {
+            margin: 5px;
+            width: 30px; /* Adjust the width as needed */
+            text-align: center;
+        }
+
+        #verifyContainer {
+            margin-top: 15px; /* Adjust the margin as needed */
+        }
+
+        #verifyButton {
+            background-color: #eee;
+            padding: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        #verifyButton.active {
+            background-color: lightpink;
+        }
+    </style>
+</head>
+<body>
+
+<div class="otp-container">
+    <p>Enter OTP sent to your email: {{ email }}</p>
+    <!-- Add action attribute to the form element -->
+    <form action="/verify_otp" method="post">
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="text" maxlength="1" name="digit1" id="digit1">
+        <input type="text" maxlength="1" name="digit2" id="digit2">
+        <input type="text" maxlength="1" name="digit3" id="digit3">
+        <input type="text" maxlength="1" name="digit4" id="digit4">
+        <div id="verifyContainer">
+            <button id="verifyButton">Verify</button>
+        </div>
+    </form>
+</div>
+
+<script>
+     function verifyOtp() {
+        var digit1 = document.getElementById('digit1').value;
+        var digit2 = document.getElementById('digit2').value;
+        var digit3 = document.getElementById('digit3').value;
+        var digit4 = document.getElementById('digit4').value;
+        var email = "{{ email }}";  // Replace with actual email from the template
+
+        // Add logic to prevent empty fields and enable the button only when all fields are filled
+        if (digit1 && digit2 && digit3 && digit4) {
+            document.getElementById('otpForm').submit();
+        } else {
+            alert('Please fill in all OTP fields.');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        var digitInputs = document.querySelectorAll('input[id^="digit"]');
+        var verifyButton = document.getElementById('verifyButton');
+
+        // Set focus on the first input field
+        digitInputs[0].focus();
+
+        // Add event listeners to move focus to the next input on input
+        digitInputs.forEach(function (input, index, array) {
+            input.addEventListener('input', function () {
+                if (this.value.length === 1) {
+                    if (index < array.length - 1) {
+                        array[index + 1].focus();
+                    } else {
+                        // If all inputs are filled, make the verify button active
+                        verifyButton.classList.add('active');
+                    }
+                } else {
+                    // If an input is cleared, make the verify button inactive
+                    verifyButton.classList.remove('active');
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

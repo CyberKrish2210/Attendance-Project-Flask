@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Making Attendance Easy</title>
+</head>
+<body>
+
+<h1>Make sure your own face is only visible - {{email}}</h1>
+
+<video id="webcam" width="640" height="480" autoplay></video>
+<button id="startRecording">Start Recording</button>
+<button id="stopRecording">Stop Recording</button>
+
+<script>
+   document.addEventListener('DOMContentLoaded', () => {
+    const video = document.getElementById('webcam');
+    const startRecordingButton = document.getElementById('startRecording');
+    const stopRecordingButton = document.getElementById('stopRecording');
+    const chunks = [];
+    let mediaRecorder;
+    let webcamStream;
+
+    startRecordingButton.addEventListener('click', () => {
+        chunks.length = 0;
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+                webcamStream = stream;
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        chunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const formData = new FormData();
+                    formData.append('video', blob, 'webcam-video.webm');
+                    formData.append('email', '{{email}}');
+
+                    fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Redirect to the congrats page on success
+                            window.location.href = data.redirect_url;
+                        } else {
+                            // Display an error message or handle the failure case
+                            console.error(data.message);
+
+                            // Redirect to a different Flask URL on failure
+                            const redirectUrl = `/failure_url?email=${encodeURIComponent('{{email}}')}&detected_person=${encodeURIComponent(data.detected_person)}&entered_person=${encodeURIComponent(data.entered_person)}`;
+                            window.location.href = redirectUrl;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+
+                        // Redirect to a different Flask URL on error
+                        window.location.href = '/error_url';
+                    });
+
+                    // Clear chunks array for the next recording
+                    chunks.length = 0;
+                };
+
+                mediaRecorder.start();
+            })
+            .catch((error) => {
+                console.error('Error accessing webcam:', error);
+            });
+    });
+
+    stopRecordingButton.addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+
+            // Stop webcam stream
+            if (webcamStream) {
+                const tracks = webcamStream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+        }
+    });
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Making Attendance Easy</title>
+</head>
+<body>
+    <!-- Create a form with a hidden input for email -->
+    <form id="attendanceForm" method="post" action="/check_wifi_strength">
+        <input type="hidden" name="email" value="{{ email }}">
+        <h1>Are U in the Classroom: {{ email }}</h1>
+        <h1>Lets check the wifi strength</h1>
+
+        <!-- Display the button -->
+        <button type="submit" id="attendanceButton">Mark Your Attendance</button>
+    </form>
+
+    <script>
+        // Add an event listener to the button
+        document.getElementById('attendanceButton').addEventListener('click', function () {
+            // Submit the form
+            document.getElementById('attendanceForm').submit();
+        });
+    </script>
+</body>
+</html>

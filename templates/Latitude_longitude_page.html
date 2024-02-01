@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Making Attendance Easy</title>
+    <style>
+        /* Add some styles to position the time at the bottom */
+        #timeInfo {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            background-color: #f0f0f0;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Style for the button */
+        #attendanceButton {
+            display: none; /* Initially hide the button */
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+  <form id="attendanceForm" method="post" action="/attendance_marked">
+    <input type="hidden" name="email" value="{{ email }}">
+    <h1>Welcome - {{ email }}</h1>
+    <h3>Let's check your current Location</h3>
+    <!-- Display the location information -->
+    <p id="locationInfo"></p>
+    <!-- Display the current time -->
+    <div id="timeInfo"></div>
+    <!-- Display the attendance button -->
+    <button id="attendanceButton" type="submit">Mark Your Attendance</button>
+</form>
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get the locationInfo, timeInfo, and button elements
+            var locationInfo = document.getElementById('locationInfo');
+            var timeInfo = document.getElementById('timeInfo');
+            var attendanceButton = document.getElementById('attendanceButton');
+
+            // Request the user's location when the page loads
+            navigator.geolocation.getCurrentPosition(function (position) {
+                // Get the latitude and longitude
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+
+                // Display the location information
+                locationInfo.textContent = 'Your current location is: ' + latitude + ', ' + longitude;
+
+                // Check if latitude and longitude fall within the specified range
+                var isInRange = (latitude >= 18.55 && latitude <= 18.60 && longitude >= 73.70 && longitude <= 73.85);
+
+                // Check if the current time falls within the specified interval (9:00 AM to 5:30 PM)
+                var currentTime = new Date();
+                var currentHour = currentTime.getHours();
+                var currentMinutes = currentTime.getMinutes();
+                var isTimeInRange = (currentHour > 00 || (currentHour === 00 && currentMinutes >= 0)) &&
+                                    (currentHour < 24 || (currentHour === 24 && currentMinutes <= 30));
+
+                // Display or hide the attendance button based on location and time
+                attendanceButton.style.display = isInRange && isTimeInRange ? 'block' : 'none';
+            }, function (error) {
+                // Handle errors if the user denies permission or if there's an issue
+                locationInfo.textContent = 'Error getting location: ' + error.message;
+            });
+
+            // Display the current time
+            setInterval(function () {
+                var currentTime = new Date();
+                var hours = currentTime.getHours();
+                var minutes = currentTime.getMinutes();
+                var seconds = currentTime.getSeconds();
+
+                // Ensure the time is always displayed with two digits
+                hours = (hours < 10) ? '0' + hours : hours;
+                minutes = (minutes < 10) ? '0' + minutes : minutes;
+                seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+                // Display the time
+                timeInfo.textContent = 'Current Time: ' + hours + ':' + minutes + ':' + seconds;
+            }, 1000); // Update every second
+        });
+
+        function markAttendance() {
+            // Trigger the form submission
+            attendanceForm.submit();
+            // You can add any additional logic here before redirecting
+            // For example, sending an AJAX request to the server
+            // Redirect to the Flask route
+            window.location.href = '/attendance_marked';
+        }
+    </script>
+</body>
+</html>
